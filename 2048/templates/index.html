@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 90vh;
+            background-color: #111; /* Dark background color for dark mode */
+            color: #fff; /* Light text color for dark mode */
+            /* overflow: hidden; Hide overflow on mobile devices */
+        }
+
+        #game-container {
+            border-radius: 10px;
+            /* overflow: hidden; */
+            padding: 10px;
+            position: relative;
+        }
+
+        #score-container {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            margin-left: 20px;
+            text-align: left;
+            font-size: 24px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            border-radius: 10px;
+            z-index: 1;
+        }
+
+        table, th, td {
+            border: 10px solid #ffffff;
+            border-radius: 20px;
+        }
+
+        th, td {
+            height: 80px;
+            width: 80px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        body.dark-mode {
+            background-color: #111;
+            color: #fff;
+        }
+
+        #game-container.dark-mode {
+            border: 5px solid #333;
+        }
+
+        table.dark-mode {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table.dark-mode, th.dark-mode, td.dark-mode {
+            border: 2px solid #333;
+        }
+
+        #reset-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px; /* Adjusted font size for better mobile experience */
+        }
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            color: rgb(107, 255, 243);
+            z-index: 2; /* Ensure it's above the table */
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container" class="dark-mode">
+        <button id="reset-button" onclick="resetGame()">Reset</button>
+        <div id="score-container">Score: {{ score }}</div>
+        {% if gameOver > 0 %}
+            <div id="game-over" style="display: block;">You Lose!</div>
+        {% else %}
+            <div id="game-over" style="display: none;">You Lose!</div>
+        {% endif %}
+        <table class="dark-mode">
+            {% for i in range(4) %}
+                <tr>
+                    {% for j in range(4) %}
+                        <td class="dark-mode" style="background-color: rgb({{ colors[i][j][0] }}, {{ colors[i][j][1] }}, {{ colors[i][j][2] }});">
+                            {{ grid[i][j] }}
+                        </td>                    
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <script>
+        let touchStartX, touchStartY, touchEndX, touchEndY;
+
+        // Touch start event
+        document.addEventListener('touchstart', (event) => {
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+        });
+
+        // Touch end event
+        document.addEventListener('touchend', (event) => {
+            touchEndX = event.changedTouches[0].clientX;
+            touchEndY = event.changedTouches[0].clientY;
+
+            handleSwipe();
+        });
+
+        // Handle swipe gestures
+        function handleSwipe() {
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            const threshold = 10; // Adjust as needed
+
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
+                // Horizontal swipe
+                sendMove(deltaX > 0 ? 'right' : 'left');
+            } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > threshold) {
+                // Vertical swipe
+                sendMove(deltaY > 0 ? 'down' : 'up');
+            }
+        }
+
+        // Your JavaScript code remains the same
+        // Your JavaScript code for interacting with the server
+        // For example, you might use fetch to send move requests to the server
+
+        async function sendMove(direction) {
+            const response = await fetch('/move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `direction=${direction}`,
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Update your game interface based on the received data
+                console.log(data);
+                updateGameInterface(data.grid, data.score, data.colors,data.gameOver);
+            } else {
+                console.error('Failed to send move request.');
+            }
+        }
+
+        // Reset game function
+        async function resetGame() {
+            //call the reset function
+            const response = fetch('/reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            });
+            if (response.ok) {
+                console.log('Game reset');
+                const data = await response.json();
+                console.log(data);
+                // console.log(data.gameOver);
+                updateGameInterface(data.grid, data.score, data.colors,data.gameOver);
+            } else {
+                console.error('Failed to reset game.');
+            }
+            location.reload();
+        }
+
+        // Example:
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft') {
+                sendMove('left');
+            } else if (event.key === 'ArrowRight') {
+                sendMove('right');
+            } else if (event.key === 'ArrowUp') {
+                sendMove('up');
+            } else if (event.key === 'ArrowDown') {
+                sendMove('down');
+            }
+        });
+
+        // Update game interface based on received data
+        function updateGameInterface(grid, score, colors,gameOver) {
+            const table = document.querySelector('table');
+            const scoreContainer = document.getElementById('score-container');
+
+            // Update the grid cells
+            for (let i = 0; i < grid.length; i++) {
+                const row = table.rows[i];
+                for (let j = 0; j < grid[i].length; j++) {
+                    const cell = row.cells[j];
+                    const rgb = colors[i][j];
+                    cell.style.backgroundColor = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+                    cell.innerHTML = grid[i][j];
+                }
+            }
+
+            // Update the score
+            scoreContainer.innerHTML = `Score: ${score}`;
+            // console.log("Hereo");
+            console.log(gameOver);
+            if(gameOver>0){
+                // console.log("Here");
+                document.getElementById('game-over').style.display = 'block';
+            }
+            else{
+                document.getElementById('game-over').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

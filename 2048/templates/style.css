@@ -1,0 +1,60 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #111; /* Dark background color for dark mode */
+    color: #fff; /* Light text color for dark mode */
+}
+
+#game-container {
+    /* border: 5px solid #ffffff; Dark border color for dark mode */
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 10px;
+}
+
+#score-container {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 20px;
+    text-align: left;
+    font-size: 24px;
+}
+
+table {
+    /* Important for consistency across modes */
+    border-collapse: collapse;
+    width: 100%; /* Set table width to 100% */
+    border-radius: 10px; /* Rounded corners for the table */
+}
+
+table, th, td {
+    padding: 5px; /* Add padding for all cells */
+}
+
+table.dark-mode, th.dark-mode, td.dark-mode {
+    border: 2px solid #333; /* Dark border color for dark mode */
+}
+
+th, td {
+    border: 10px solid #ffffff; /* White border for regular mode */
+    border-radius: 20px; /* Rounded corners for cells */
+    height: 100px; /* Increased height for tiles */
+    width: 100px; /* Increased width for tiles */
+    text-align: center;
+    font-size: 24px;
+}
+
+/* Dark mode styles */
+body.dark-mode {
+    background-color: #111;
+    color: #fff;
+}
+
+#game-container.dark-mode {
+    border: 5px solid #333;
+}
